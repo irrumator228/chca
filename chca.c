@@ -21,6 +21,8 @@
 
 #define VERSION "chca-0.0.0.1-egg (c) 2023 Jerzy Pavka\n"
 
+//-rjkejirgrjoiejgoige
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
