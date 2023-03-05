@@ -59,7 +59,6 @@ int runer(char *inputf_s, char *outputf_s) {
 			fprintf(output_file, "<h2><b>%s</b></h2>", f_s);
 			break;
 		case '#':
-
 			break;
 		case '\n':
 		case '\0':
@@ -74,6 +73,7 @@ int runer(char *inputf_s, char *outputf_s) {
 		for (unsigned int j = 0; j < strlen(f_s); j++) {
 			switch(f_s[j]) {
 			case '[':
+				
 				break;
 			
 			default:
@@ -109,11 +109,3 @@ int main(int argc, char *argv[]) {
 	fprintf(file, "<ul>%s</ul>");
 
 	fprintf(file, "<li>%s</li>");
-
-	void head() {
-	
-	
-
-	return	;
-}
-*/
