@@ -21,8 +21,6 @@
 
 #define VERSION "chca-0.0.0.1-egg (c) 2023 Jerzy Pavka\n"
 
-//-rjkejirgrjoiejgoige
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -31,12 +29,21 @@
 
 #define KMAG "\x1B[35m"
 #define KNRM "\033[0m"
+/*
+#define KNRM  "\x1B[0m"
+#define KRED  "\x1B[31m"
+#define KGRN  "\x1B[32m"
+#define KYEL  "\x1B[33m"
+#define KBLU  "\x1B[34m"
+#define KMAG  "\x1B[35m"
+#define KCYN  "\x1B[36m"
+#define KWHT  "\x1B[37m"
+*/
 
 struct stack {
 	char stck[100][100];
-	unsigned int size;
-	char str[100];
 	unsigned int len[100];
+	unsigned int size;
 	char type[100][5];
 
 	//char f[100][100];
@@ -60,6 +67,16 @@ struct fstck {
 	unsigned int je[1000];
 	unsigned int size;
 };
+
+struct command {
+	char com[100];
+	char type[100][3];
+
+	int next;
+
+};
+
+
 
 void printi (char *s, unsigned int j) {
 	if (s[strlen(s) - 1] == '\n') s[strlen(s) - 1] = ' ';
@@ -106,13 +123,13 @@ void merror (unsigned int n, char *s, unsigned int  i, unsigned int j) {
 		err_s = "unknown operator";
 		break;
 	case 6:
-		err_s = "extra closing parenthesis";
+		err_s = "extra closing/opening parenthesis";
 		break;
 	case 7:
 		err_s = "unknown character";
 		break;
 	case 8:
-		err_s = "extra opening parenthesis";
+		err_s = " error code not reserved";
 		break;
 	case 9:
 		err_s = "it's no such file or directory";
@@ -122,11 +139,11 @@ void merror (unsigned int n, char *s, unsigned int  i, unsigned int j) {
 		break;
 	default:
 		err_s = "unknown error";
-		break;			
+		break;
 	}
 	if ((i == 0) && (j == 0)) {
 		printf("%s\n", s);
-		printf("\n%u error. %s.\n", n, err_s);
+		printf("%u error. %s.\n", n, err_s);
 	}
 	else if (i == 0) {
 		printi(s,j);
@@ -149,8 +166,14 @@ void printer (unsigned int code, char *s, char *f, char *q, unsigned int i, unsi
 		printf("  no entries found\n");
 		printf("!(%s) %s\n", q, f);
 		break;
+	case 3: //вывод вхождения из файла с модификатором clear
+		printf("(%s) %s:%u:%u\n", q, f, i, j);
+		break;
+	case 4: //вывод отсутствия вхождения с модификатором clear
+		printf("!(%s) %s\n", q, f);
+		break;
 	default: //вывод дефолта.
-		printf("  chca");
+		merror(10, "in function printer default output", 0, 0);
 		break;
 	}
 }
@@ -261,17 +284,13 @@ int listdir (char *s) {
 	return 0;
 }
 
-struct stack lexer (char *s, struct stack stck1) {
-
-	
-
+struct stack lexer (struct stack stck1) {
 	struct stack stck2;
 	
-	unsigned int l = 0;
 	struct cur cr = { 0 , 0 };
 
-	char *s2 = "._/~-abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789абвгдеёжзийклмнопрстуфхцчшщъыьэюяАБВГДЕЁЖЗИЙКЛМНОПРCТУФХЦЧШЩЪЫЬЭЮЯ";
 	int done = -1;
+	unsigned int l = 0;
 
 	for (unsigned int i = 0; i < stck1.size; i++) {
 
@@ -282,19 +301,15 @@ struct stack lexer (char *s, struct stack stck1) {
 			switch (stck1.stck[i][j]) {
 			case '\n':
 			case '\0':
-
+				cr.j = 0;
 				done = 1;
 				break;
 			case '-':
 			case '.':
 			case '/':
-				/*if (stck1.stck) {
-					done = 1;
-					if (cr.j != 0) cr.i++;
-					stck1.stck[cr.i][0] = s[i];
-					cr.i++;
-					cr.j = 0;
-				}*/
+				done = 1;
+				stck2.stck[cr.i][cr.j] = stck1.stck[i][j];
+				cr.j++;
 				break;
 			case '(':
 			case '{':
@@ -303,7 +318,7 @@ struct stack lexer (char *s, struct stack stck1) {
 				l++;
 				done = 1;
 				if (cr.j != 0) cr.i++;
-				stck2.stck[cr.i][0] = s[j];
+				stck2.stck[cr.i][0] = stck1.stck[i][j];;
 				//printf("%c\n", stck2.stck[cr.i][cr.j]);//========================
 				cr.i++;
 				cr.j = 0;
@@ -314,12 +329,11 @@ struct stack lexer (char *s, struct stack stck1) {
 				l--;
 				done = 1;
 				if (cr.j != 0) cr.i++;
-				stck2.stck[cr.i][0] = s[j];
+				stck2.stck[cr.i][0] = stck1.stck[i][j];;
 				cr.i++;
 				cr.j = 0;
 				break;
 			case ' ':
-				//stck2.stck[cr.j][0] = s[j];
 				cr.j = 0;
 				done = 1;
 				break;
@@ -332,48 +346,43 @@ struct stack lexer (char *s, struct stack stck1) {
 			case '#':
 			case ',':
 			case '%':
-			case '+':
+			//case '+':
 			case '=':
 			case '@':
 				done = 1;
 				if (cr.j != 0) cr.i++;
-				stck2.stck[cr.i][0] = s[j];
+				stck2.stck[cr.i][0] = stck1.stck[i][j];;
 				cr.i++;
 				cr.j = 0;
 				break;
+			default:
+				done = 1;
+				stck2.stck[cr.i][cr.j] = stck1.stck[i][j];
+				cr.j++;
+				break;
 			}
-			for (unsigned int k = 0; (k < strlen(s2) && done < 0); k++) {
-				if (stck1.stck[i][j] == s2[k]) {
-					done = 1;
-					stck2.stck[cr.i][cr.j] = stck1.stck[i][j];
-					cr.j++;
-				}
-			}
-			if (done < 0) merror(7, s, 0, j);
+
+			if (done < 0) merror(7, stck1.stck[i], 0, j);
 			done = -1;
 		}
-	}
-	stck2.size = cr.i + 1;
-	//=========================================
-	stck2.len[0] = 0;
-	for (unsigned int i = 1; i < stck2.size; i++) {
-		stck2.len[i] = stck2.len[i-1] + strlen(stck2.stck[i]);
-	}
-	//=========================================
-	if (l != 0) { merror(8, s, 0, stck2.len[stck2.size-1]); }
 
-	return stck2;
+		stck2.size = cr.i + 1;
+		if (l != 0) merror(6, stck1.stck[i], 0, 0);
+		return stck2;
+	}
 }
 
 struct stack parser (struct stack stck1) {
 	for (unsigned int i = 0; i < stck1.size; i++) {
-		//printf("%s\n", stck1.stck[i]);//=============================
+		printf("%s\n", stck1.stck[i]);//=============================
 		switch (stck1.stck[i][0]) {
 		case '(':
+			break;
 		case ')':
 			break;
-		case 'r':
-			printf("aboba = '%c' ", stck1.stck[i][0]); stck1.type[i][0] = 'p';
+		case '+':
+			if (stck1.stck[i][1] != '\0') stck1.type[i][0] = 'p';
+			else merror(5, stck1.stck[i], 0, 0);
 			break;
 		case '?':
 		case '%':
@@ -406,11 +415,20 @@ struct stack parser (struct stack stck1) {
 void runer (struct stack stck1) {
 	struct fstck fstck1;
 
+	char par[100];
+	unsigned int par_i = 0;
+
 	for (unsigned int i = 0; i < stck1.size; i++) {
+		if (stck1.type[i][0] == 'p') {
+			par[par_i] = stck1.stck[i][0];
+			par_i++;
+			printf("%c\n", par[par_i]);
+		}
+	}
 
-		/*if (stck1.type[i][0] == 'p') {
 
-		}*/
+
+	for (unsigned int i = 0; i < stck1.size; i++) {
 
 		if (stck1.type[i][0] == 'q') {
 
@@ -421,10 +439,10 @@ void runer (struct stack stck1) {
 					
 					if (fstck1.i[0] != 0) {
 						for (unsigned int j = 0; j < fstck1.size; j++) {
-							printer(1, fstck1.s[j], fstck1.f[j], fstck1.query[j], fstck1.i[j], fstck1.j[j]);
+							//printer(1, fstck1.s[j], fstck1.f[j], fstck1.query[j], fstck1.i[j], fstck1.j[j]);
 						}
 					}
-					else printer(2, " ", fstck1.f[0], fstck1.query[0], 0, 0);
+					//else printer(2, " ", fstck1.f[0], fstck1.query[0], 0, 0);
 					
 				}
 			}
@@ -458,7 +476,7 @@ void run(char *s) {
 	strcpy(stck1.stck[0], s);
 	stck1.size = 1;
 
-	runer(parser(lexer(s, stck1)));
+	runer(parser(lexer(stck1)));
 }
 
 void runfromfile(char *f) {
@@ -479,19 +497,6 @@ void runfromfile(char *f) {
 int main (int argc, char *argv[]) {
 	setlocale(LC_CTYPE, "Russian.UTF-8"); /*change your language*/
 	if (argc > 1) {
-		
-		/*
-		unsigned int j = 0;
-		for (unsigned int i = 0; i < argc; i++) {
-			j += strlen(argv[j]);
-		}
-
-		char s[j];
-
-		for (unsigned int i = 0; i < argc; i++) {
-			j += strlen(argv[j]);
-		}*/
-
 		switch (argv[1][0]) {
 		case '(':
 			run(argv[1]);
