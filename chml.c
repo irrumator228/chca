@@ -63,7 +63,6 @@ int runer(char *inputf_s, char *outputf_s) {
 		switch(f_s[0]) {
 		case '/':
 			f_s[0] = ' ';
-			for (uint )
 			fprintf(output_file, "<h2><b>%s</b></h2>\n", f_s);
 			break;
 		case '#':
@@ -88,16 +87,23 @@ int runer(char *inputf_s, char *outputf_s) {
 			//if not ' ', run default
 		default:
 			fprintf(output_file, "%s<br>\n", f_s);
-			break;
-		}
-		for (unsigned int j = 0; j < strlen(f_s); j++) {
-			switch(f_s[j]) {
-			case '[':
-				
-				break;
-			default:
-				break;
+			for (unsigned int j = 0; j < strlen(f_s); j++) {
+				switch(f_s[j]) {
+				case '[':
+					fprintf(output_file, "<a href='");
+					break;
+				case ']':
+					fprintf(output_file, "</a>");
+					break;
+				case '|':
+					fprintf(output_file, "'>");
+					break;
+				default:
+					fprintf(output_file, "%c", f_s[j]);
+					break;
+				}
 			}
+			break;
 		}
 	}
 	if (l != 0) merror(4, " ", 0, 0);
@@ -115,7 +121,7 @@ int main(int argc, char *argv[]) {
 }
 	/*
 
-	<a href='%s'>%s</a>
+	
 
 	<h2><b>%s</b></h2>
 
