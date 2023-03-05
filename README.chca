@@ -15,7 +15,7 @@
 
 #name.chca
 #date.03/42/27/01/2023
-#autor.(name.Jerzy_Pavka),(mail.[jerzypavka@gmail.com],(site.[https://irrumator228.github.io/])
+#author.(name.Jerzy_Pavka),(mail.[jerzypavka@gmail.com],(site.[https://irrumator228.github.io/])
 #tag.база_знаний,программирование
 #version.[0.0.1-egg].date.19/02/2023
    ======
@@ -118,7 +118,6 @@ f - find
 
   >> ~/file
   > ~/file
-  
   
   лькастен|(#>>n<<ame.цеттелькастен)], [теnհ
   лькастен|(# n ame.цеттелькастен)], [теnհ

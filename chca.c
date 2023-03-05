@@ -19,7 +19,7 @@
  *          site https://irrumator228.github.io/
  */
 
-#define VERSION "chca-0.0.0.1-egg (c) 2023 Jerzy Pavka\n"
+#define VERSION "chca-0.0.0.2-egg (c) 2023 Jerzy Pavka\n"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -68,7 +68,7 @@ struct onefile {
 	char f[100];
 	unsigned int i;
 	unsigned int j;	
-}
+};
 
 struct command {
 	char com[100];
@@ -334,6 +334,7 @@ struct stack lexer (struct stack stck1) {
 				cr.j = 0;
 				break;
 			case ' ':
+				if (cr.j != 0) cr.i++;
 				cr.j = 0;
 				done = 1;
 				break;
@@ -374,7 +375,7 @@ struct stack lexer (struct stack stck1) {
 
 struct stack parser (struct stack stck1) {
 	for (unsigned int i = 0; i < stck1.size; i++) {
-		printf("%s\n", stck1.stck[i]);//=============================
+		//printf("%s\n", stck1.stck[i]);//=============================
 		switch (stck1.stck[i][0]) {
 		case '(':
 			break;
@@ -383,6 +384,7 @@ struct stack parser (struct stack stck1) {
 		case '+':
 			if (stck1.stck[i][1] != '\0') stck1.type[i][0] = 'p';
 			else merror(5, stck1.stck[i], 0, 0);
+			//printf("fgfgfg\n");
 			break;
 		case '?':
 		case '%':
@@ -415,18 +417,16 @@ struct stack parser (struct stack stck1) {
 void runer (struct stack stck1) {
 	struct fstck fstck1;
 
-	char par[100];
+	char par[100][5];
 	unsigned int par_i = 0;
 
 	for (unsigned int i = 0; i < stck1.size; i++) {
 		if (stck1.type[i][0] == 'p') {
-			par[par_i] = stck1.stck[i][0];
+			strcpy (par[par_i], stck1.stck[i]);
 			par_i++;
-			printf("%c\n", par[par_i]);
+			printf("'%s'\n", par[par_i]);
 		}
 	}
-
-
 
 	for (unsigned int i = 0; i < stck1.size; i++) {
 
@@ -439,10 +439,10 @@ void runer (struct stack stck1) {
 					
 					if (fstck1.i[0] != 0) {
 						for (unsigned int j = 0; j < fstck1.size; j++) {
-							//printer(1, fstck1.s[j], fstck1.f[j], fstck1.query[j], fstck1.i[j], fstck1.j[j]);
+							printer(1, fstck1.s[j], fstck1.f[j], fstck1.query[j], fstck1.i[j], fstck1.j[j]);
 						}
 					}
-					//else printer(2, " ", fstck1.f[0], fstck1.query[0], 0, 0);
+					else printer(2, " ", fstck1.f[0], fstck1.query[0], 0, 0);
 					
 				}
 			}
