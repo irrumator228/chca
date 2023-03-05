@@ -20,6 +20,9 @@ void merror (unsigned int n, char *s, unsigned int i, unsigned int j) {
 	case 3:
 		err_s = "close file";
 		break;
+	case 4:
+		err_s = "extra closing/opening parenthesis";
+		break;
 	default:
 		err_s = "unknow error";			
 	}
@@ -52,13 +55,24 @@ int runer(char *inputf_s, char *outputf_s) {
 	fprintf(output_file, "</head><body>");
 	
 	char f_s[1000];
-
+	unsigned int l = 0;
 	for (unsigned int i = 0; fgets(f_s, 1000, input_file) != NULL; i++) {
+		for (unsigned int j = 0; j < strlen(f_s); j++) {
+			if (f_s[j] == '\n') f_s[j] = '\0';
+		}
 		switch(f_s[0]) {
 		case '/':
 			fprintf(output_file, "<h2><b>%s</b></h2>", f_s);
 			break;
 		case '#':
+			break;
+		case '{':
+			l++;
+			fprintf(output_file, "<p>");
+			break;
+		case '}':
+			l--;
+			fprintf(output_file, "</p>");
 			break;
 		case '\n':
 		case '\0':
@@ -75,12 +89,12 @@ int runer(char *inputf_s, char *outputf_s) {
 			case '[':
 				
 				break;
-			
 			default:
 				break;
 			}
 		}
 	}
+	if (l != 0) merror(4, " ", 0, 0);
 	fprintf(output_file, "</body></html>");
 	fclose(input_file);
 	fclose(output_file);
@@ -104,8 +118,9 @@ int main(int argc, char *argv[]) {
 
 	fprintf(file, "<b>%s</b>");
 
-	fprintf(file, "<p>%s</p>");
+	fprintf(file, "%s</p>");
 
 	fprintf(file, "<ul>%s</ul>");
 
 	fprintf(file, "<li>%s</li>");
+	*/
