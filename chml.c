@@ -48,7 +48,7 @@ int runer(char *inputf_s, char *outputf_s) {
 
 	//fprintf(output_file, "<title>%s</title>", name);
 
-	//fprintf(output_file, "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">");
+	fprintf(output_file, "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">");
 
 	//fprintf(output_file, "<meta name=\"Keywords\" content=\"%s\">", keywords);
 	
@@ -62,7 +62,9 @@ int runer(char *inputf_s, char *outputf_s) {
 		}
 		switch(f_s[0]) {
 		case '/':
-			fprintf(output_file, "<h2><b>%s</b></h2>", f_s);
+			f_s[0] = ' ';
+			for (uint )
+			fprintf(output_file, "<h2><b>%s</b></h2>\n", f_s);
 			break;
 		case '#':
 			break;
@@ -72,16 +74,20 @@ int runer(char *inputf_s, char *outputf_s) {
 			break;
 		case '}':
 			l--;
-			fprintf(output_file, "</p>");
+			fprintf(output_file, "</p>\n");
 			break;
 		case '\n':
 		case '\0':
 			break;
 		case ' ':
-			if (f_s[1] == ' ') break;
+			if (f_s[3] == '=') break;
+ 			if (f_s[1] == ' ') {
+				fprintf(output_file, "<pre translate=\"no\">%s</pre translate=\"no\">", f_s);
+				break;
+			}
 			//if not ' ', run default
 		default:
-			fprintf(output_file, "%s<br>", f_s);
+			fprintf(output_file, "%s<br>\n", f_s);
 			break;
 		}
 		for (unsigned int j = 0; j < strlen(f_s); j++) {
@@ -108,19 +114,16 @@ int main(int argc, char *argv[]) {
 	return 0;
 }
 	/*
-	fprintf(file, "<body>%s</body></html>");
 
-	fprintf(file, "<pre translate=\"no\">%s</pre translate=\"no\">");
+	<a href='%s'>%s</a>
 
-	fprintf(file, "<a href='%s'>%s</a>");
+	<h2><b>%s</b></h2>
 
-	fprintf(file, "<h2><b>%s</b></h2>");
+	<b>%s</b>
 
-	fprintf(file, "<b>%s</b>");
+	%s</p>
 
-	fprintf(file, "%s</p>");
+	<ul>%s</ul>
 
-	fprintf(file, "<ul>%s</ul>");
-
-	fprintf(file, "<li>%s</li>");
+	<li>%s</li>
 	*/

@@ -24,7 +24,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <locale.h>
 #include <dirent.h>
 
 #define KNRM  "\x1B[0m"
@@ -495,7 +494,6 @@ void runfromfile(char *f) {
 }
 
 int main (int argc, char *argv[]) {
-	setlocale(LC_CTYPE, "Russian.UTF-8"); /*change your language*/
 	if (argc > 1) {
 		switch (argv[1][0]) {
 		case '(':
