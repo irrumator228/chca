@@ -27,9 +27,6 @@
 #include <locale.h>
 #include <dirent.h>
 
-#define KMAG "\x1B[35m"
-#define KNRM "\033[0m"
-/*
 #define KNRM  "\x1B[0m"
 #define KRED  "\x1B[31m"
 #define KGRN  "\x1B[32m"
@@ -38,7 +35,6 @@
 #define KMAG  "\x1B[35m"
 #define KCYN  "\x1B[36m"
 #define KWHT  "\x1B[37m"
-*/
 
 struct stack {
 	char stck[100][100];
@@ -68,15 +64,19 @@ struct fstck {
 	unsigned int size;
 };
 
+struct onefile {
+	char f[100];
+	unsigned int i;
+	unsigned int j;	
+}
+
 struct command {
 	char com[100];
 	char type[100][3];
+	struct onefile file1[100];
 
-	int next;
-
+	int *next;
 };
-
-
 
 void printi (char *s, unsigned int j) {
 	if (s[strlen(s) - 1] == '\n') s[strlen(s) - 1] = ' ';
