@@ -8,7 +8,7 @@
 
 char stack[100][100];
 
-void merror (uint n, char *s, uint i, uint j) {
+void merror (unsigned int n, char *s, unsigned int i, unsigned int j) {
 	char *err_s;
 	switch (n) {
 	case 1:
@@ -79,7 +79,7 @@ int main(int argc, char *argv[]) {
     setlocale(LC_CTYPE, "Russian.UTF-8"); /*change your language*/
 
 	if (argv[1] != NULL && argv[2] != NULL) runer(argv[1], argv[2]);
-
+	else printf("write input file and output file");
 	return 0;
 }
 	/*
