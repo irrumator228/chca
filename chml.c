@@ -59,7 +59,10 @@ int runer(char *inputf_s, char *outputf_s) {
 			fprintf(output_file, "<h2><b>%s</b></h2>", f_s);
 			break;
 		case '#':
-			
+
+			break;
+		case '\n':
+		case '\0':
 			break;
 		case ' ':
 			if (f_s[1] == ' ') break;
@@ -68,7 +71,15 @@ int runer(char *inputf_s, char *outputf_s) {
 			fprintf(output_file, "%s<br>", f_s);
 			break;
 		}
-
+		for (unsigned int j = 0; j < strlen(f_s); j++) {
+			switch(f_s[j]) {
+			case '[':
+				break;
+			
+			default:
+				break;
+			}
+		}
 	}
 	fprintf(output_file, "</body></html>");
 	fclose(input_file);
@@ -79,7 +90,7 @@ int main(int argc, char *argv[]) {
     setlocale(LC_CTYPE, "Russian.UTF-8"); /*change your language*/
 
 	if (argv[1] != NULL && argv[2] != NULL) runer(argv[1], argv[2]);
-	else printf("write input file and output file");
+	else printf("write as the arguments paths for input and output files");
 	return 0;
 }
 	/*
