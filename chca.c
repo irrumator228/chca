@@ -374,7 +374,7 @@ struct stack lexer (struct stack stck1) {
 
 struct stack parser (struct stack stck1) {
 	for (unsigned int i = 0; i < stck1.size; i++) {
-		//printf("%s\n", stck1.stck[i]);//=============================
+		//printf("q = %s t = %s\n", stck1.stck[i]);//=============================
 		switch (stck1.stck[i][0]) {
 		case '(':
 			break;
@@ -491,6 +491,17 @@ void runfromfile(char *f) {
 		}
 	}
 	fclose(file);
+}
+
+char runcom[1000](char *s) {
+	//(tag) /home/krot-dendi2e/my_projects/githuh/chca/README.chca
+	//
+	/*
+
+	return [file | files] [with_i_j] [with comm]
+
+	
+	*/
 }
 
 int main (int argc, char *argv[]) {
