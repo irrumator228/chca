@@ -18,6 +18,11 @@
  *          mail jerzypavka@gmail.com
  *          site https://irrumator228.github.io/
  */
+#if __linux__
+
+
+
+#endif
 
 #define VERSION "chca-0.0.0.2-egg (c) 2023 Jerzy Pavka\n"
 
@@ -400,6 +405,8 @@ struct stack parser (struct stack stck1) {
 			stck1.type[i][0] = 'l';
 			break;
 		case '~':
+			char *home = getenv ("HOME");
+
 		case '/':
 			if (opendir(stck1.stck[i]) != NULL) { stck1.type[i][0] = 'd'; }
 			else if (fopen(stck1.stck[i],"rt") != NULL) { stck1.type[i][0] = 'f'; }
@@ -493,7 +500,6 @@ void runfromfile(char *f) {
 	fclose(file);
 }
 
-char runcom[1000](char *s) {
 	//(tag) /home/krot-dendi2e/my_projects/githuh/chca/README.chca
 	//
 	/*
@@ -501,8 +507,122 @@ char runcom[1000](char *s) {
 	return [file | files] [with_i_j] [with comm]
 
 	
+
+	(tag) /home/krot-dendi2e/my_projects/githuh/chca/README.chca
+
 	*/
+	/*
+	<b>%s</b>
+
+	<ul>%s</ul>
+
+	<li>%s</li>
+	*/
+
+struct stack input (char *f) {
+	if ( f == NULL) merror(1, " ", 0, 0);
+	
+	char f_s[1000];
+	
+	FILE *file;
+	file = fopen(f,"rt"); //только для чтения
+	if (file == NULL) merror(3, f, 0, 0);
+	
+	int done = -1;
+	
+	unsigned int k = 0;
+
+	for (unsigned int i = 0; fgets(f_s, 1000, file) != NULL; i++) {
+
+		if (/*f_s[0] != ' ' || f_s[0] != ' '*/1) {
+
+			for (unsigned int j = 0; j < strlen(f_s); j++) {
+				switch(f_s[j]) {
+				case ' ':
+					break;
+				case '\n':
+					break;
+				case '\0':
+					break;
+				case '/':
+					break;
+				case '(':
+					break;
+				case ')':
+					break;
+				case '.':
+					break;
+				case '#':
+					break;
+				case ':':
+					break;
+				case '{':
+					break;
+				case '}':
+					break;
+				case '|':
+					break;
+				case '[':
+					break;
+				case ']':
+					break;
+				case '\'':
+					break;
+				case '"':
+					break;
+				default:
+					break;
+				}
+			}
+		}
+	}
+	fclose(file);
 }
+
+void output(char *s) {
+	if (s == NULL) merror(1, " ", 0, 0);
+	FILE *file;
+	file = fopen(s,"w+");
+
+	if (file == NULL) merror(2, s, 0, 0);
+	
+	char f_s[1000];
+/*
+	fprintf(output_file, "<!DOCTYPE html><html");
+	if (lang[0] != '\0') fprintf(output_file, " lang=\"%s\"", lang);
+	fprintf(output_file, "><head><meta charset=\"utf-8\">");
+	if (name[0] != '\0') fprintf(output_file, "<title>%s</title>", name);
+	fprintf(output_file, "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">");
+	//fprintf(output_file, "<meta name=\"Keywords\" content=\"%s\">", keywords);	
+	fprintf(output_file, "</head>\n<body>\n");
+	fprintf(output_file, "<h2><b>%s</b></h2>\n", f_s);		
+	fprintf(output_file, "<p>");
+	fprintf(output_file, "</p>\n");
+	fprintf(output_file, "<pre translate=\"no\">%s</pre translate=\"no\">\n", f_s);
+	//fprintf(output_file, "%s<br>\n", f_s);
+	fprintf(output_file, "<a href='");
+	fprintf(output_file, "</a>\n");
+	fprintf(output_file, "'>");
+	fprintf(output_file, "%c", f_s[j]);
+	fprintf(output_file, "</body></html>");
+	fclose(output_file);
+*/
+
+}
+
+void chml(char *inputfile, char *outputfile) {
+	input()
+}
+
+
+
+
+
+
+
+
+
+
 
 int main (int argc, char *argv[]) {
 	if (argc > 1) {
