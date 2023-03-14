@@ -18,11 +18,6 @@
  *          mail jerzypavka@gmail.com
  *          site https://irrumator228.github.io/
  */
-#if __linux__
-
-
-
-#endif
 
 #define VERSION "chca-0.0.0.2-egg (c) 2023 Jerzy Pavka\n"
 
@@ -30,6 +25,12 @@
 #include <stdlib.h>
 #include <string.h>
 #include <dirent.h>
+
+#define PRINT_BUF_SIZE 60
+#define MIN_PRINT_BUF_SIZE 20
+#define MIN_STR_SIZE 10
+#define NORM_STR_SIZE 100
+#define MAX_STR_SIZE 1000
 
 #define KNRM  "\x1B[0m"
 #define KRED  "\x1B[31m"
@@ -40,16 +41,19 @@
 #define KCYN  "\x1B[36m"
 #define KWHT  "\x1B[37m"
 
-struct stack {
-	char stck[100][100];
-	unsigned int len[100];
-	unsigned int size;
-	char type[100][5];
+#if __linux__
+#endif
 
-	//char f[100][100];
-	//char s[100][1000];
-	//unsigned int i[1000];
-	//unsigned int j[1000];
+struct stack {
+	char stck[NORM_STR_SIZE][NORM_STR_SIZE];
+	unsigned int len[NORM_STR_SIZE];
+	unsigned int size;
+	char type[NORM_STR_SIZE][5];
+
+	//char f[NORM_STR_SIZE][NORM_STR_SIZE];
+	//char s[NORM_STR_SIZE][MAX_STR_SIZE];
+	//unsigned int i[MAX_STR_SIZE];
+	//unsigned int j[MAX_STR_SIZE];
 	//unsigned int size;
 };
 
@@ -58,39 +62,72 @@ struct cur {
 	unsigned int j;
 };
 
+/*
+typedef struct cur {
+	unsigned int i;
+	unsigned int j;
+} cur;
+*/
+
 struct fstck {
-	char query[100][100];
-	char f[100][100];
-	char s[100][1000];
-	unsigned int i[1000];
-	unsigned int j[1000];
-	unsigned int je[1000];
+	char query[NORM_STR_SIZE][NORM_STR_SIZE];
+	char f[NORM_STR_SIZE][NORM_STR_SIZE];
+	char s[NORM_STR_SIZE][MAX_STR_SIZE];
+	unsigned int i[MAX_STR_SIZE];
+	unsigned int j[MAX_STR_SIZE];
+	unsigned int je[MAX_STR_SIZE];
 	unsigned int size;
 };
 
-struct onefile {
-	char f[100];
+typedef struct file_entry_list {
+	//int status; //1 - entry not found, 0 - entry exists
+	char file[NORM_STR_SIZE];
+	char entry[PRINT_BUF_SIZE];
 	unsigned int i;
-	unsigned int j;	
-};
+	unsigned int j;
+} file_entry_list;
 
-struct command {
-	char com[100];
-	char type[100][3];
-	struct onefile file1[100];
+typedef struct file_entry_list_head {
+	struct file_entry_list *head;
+} file_entry_list_head;
 
-	int *next;
-};
+typedef struct lexem_list {
+	char lexem[NORM_STR_SIZE];
+	char type[3];
+	file_entry_list_head *head;
+	struct lexem_list *next;
+} lexem_list;
+
+typedef struct lexem_list_head {
+	struct lexem_list *head;
+} lexem_list_head;
+
+/*
+void remove_st(lexem_list_head *l, lexem_list *target) {
+    lexem_list **p = &l->head;
+    while ((*p) != target) {
+        p = &(*p)->next;
+    }
+    *p = target->next;
+}*/
+
+void push_st(lexem_list_head *l, lexem_list *target) {
+
+}
+
+void new_st(lexem_list_head *l, lexem_list *target) {
+	
+}
 
 void printi (char *s, unsigned int j) {
 	if (s[strlen(s) - 1] == '\n') s[strlen(s) - 1] = ' ';
- 	if (strlen(s) > 60 && j > 20) {
+ 	if (strlen(s) > PRINT_BUF_SIZE && j > MIN_PRINT_BUF_SIZE) {
 		printf("  ");
-		for (unsigned int i = j - 20; i < j - 1; i++) {
+		for (unsigned int i = j - MIN_PRINT_BUF_SIZE; i < j - 1; i++) {
 			printf("%c", s[i]);
 		}
 		printf("%s -> %s", KMAG, KNRM);
-		for (unsigned int i = j - 1; i < strlen(s) && i < j + 40; i++) {
+		for (unsigned int i = j - 1; i < strlen(s) && i < j + PRINT_BUF_SIZE-MIN_PRINT_BUF_SIZE; i++) {
 			printf("%c", s[i]);
 		}
 		printf("\n");
@@ -101,7 +138,7 @@ void printi (char *s, unsigned int j) {
 			printf("%c", s[i]);
 		}
 		printf("%s -> %s", KMAG, KNRM);
-		for (unsigned int i = j - 1; i < strlen(s) && i < j + 40; i++) {
+		for (unsigned int i = j - 1; i < strlen(s) && i < j + PRINT_BUF_SIZE-MIN_PRINT_BUF_SIZE; i++) {
 			printf("%c", s[i]);
 		}
 		printf("\n");
@@ -141,18 +178,24 @@ void merror (unsigned int n, char *s, unsigned int  i, unsigned int j) {
 	case 10:
 		err_s = "error in chca code";
 		break;
+	case 11:
+		err_s = "buffer overflow";
+		break;
 	default:
 		err_s = "unknown error";
 		break;
 	}
+	//вывод без файла, строки и номера символа 
 	if ((i == 0) && (j == 0)) {
 		printf("%s\n", s);
 		printf("%u error. %s.\n", n, err_s);
 	}
+	//вывод строки и номера символа
 	else if (i == 0) {
 		printi(s,j);
 		printf("%u error. %s:%u\n", n, err_s, j);
 	}
+	//вывод файла, строки и номера символа
 	else {
 		printi(s,j);
 		printf("%u error. %s. %s:%u:%u\n", n, err_s, s, i, j);
@@ -185,7 +228,7 @@ void printer (unsigned int code, char *s, char *f, char *q, unsigned int i, unsi
 struct fstck find (char *s, char *f) {
 	if ( f == NULL) merror(1, " ", 0, 0);
 	
-	char f_s[1000];
+	char f_s[MAX_STR_SIZE];
 	
 	FILE *file;
 	file = fopen(f,"rt"); //только для чтения
@@ -197,7 +240,7 @@ struct fstck find (char *s, char *f) {
 	
 	unsigned int k = 0;
 
-	for (unsigned int i = 0; fgets(f_s, 1000, file) != NULL; i++) {
+	for (unsigned int i = 0; fgets(f_s, MAX_STR_SIZE, file) != NULL; i++) {
 
 		if (f_s[0] != ' ' || f_s[0] != ' ') {
 
@@ -296,12 +339,52 @@ struct stack lexer (struct stack stck1) {
 	int done = -1;
 	unsigned int l = 0;
 
+	char buf[NORM_STR_SIZE];
+
 	for (unsigned int i = 0; i < stck1.size; i++) {
 
 		//printf("%s", stck1.stck[i]);//========================
 		
 		for (unsigned int j = 0; j < strlen(stck1.stck[i]); j++ ) {
+			
 			//printf("%c\n", stck1.stck[i][j]);//========================
+			switch (stck1.stck[i][j]) {
+			case '\n':
+			case '\0':
+				
+				break;
+			case '-':
+			case '.':
+			case '/':
+				break;
+			case '(':
+			case '{':
+			case '[':
+				break;
+			case ')':
+			case '}':
+			case ']':
+				break;
+			case ' ':
+				break;
+			case '&': 
+			case '^': 
+			case '!': 
+			case '|':
+			case '\\':
+			case '?':
+			case '#':
+			case ',':
+			case '%':
+			//case '+':
+			case '=':
+			case '@':
+				break;
+			default:
+				break;
+			}
+			
+			
 			switch (stck1.stck[i][j]) {
 			case '\n':
 			case '\0':
@@ -423,7 +506,7 @@ struct stack parser (struct stack stck1) {
 void runer (struct stack stck1) {
 	struct fstck fstck1;
 
-	char par[100][5];
+	char par[NORM_STR_SIZE][5];
 	unsigned int par_i = 0;
 
 	for (unsigned int i = 0; i < stck1.size; i++) {
@@ -483,16 +566,17 @@ void run(char *s) {
 	stck1.size = 1;
 
 	runer(parser(lexer(stck1)));
+	
 }
 
 void runfromfile(char *f) {
 	if ( f == NULL) merror(1, " ", 0, 0);
-	char f_s[1000];
+	char f_s[MAX_STR_SIZE];
 	FILE *file;
 	file = fopen(f,"rt"); //только для чтения
 	if (file == NULL) merror(3, f, 0, 0);
 
-	for (unsigned int i = 0; fgets(f_s, 1000, file) != NULL; i++) {
+	for (unsigned int i = 0; fgets(f_s, MAX_STR_SIZE, file) != NULL; i++) {
 		if ((f_s[0] != ' ' || f_s[1] != ' ') && f_s[0] != '\n') {
 			run(f_s);
 		}
@@ -502,27 +586,20 @@ void runfromfile(char *f) {
 
 	//(tag) /home/krot-dendi2e/my_projects/githuh/chca/README.chca
 	//
+	
 	/*
 
 	return [file | files] [with_i_j] [with comm]
 
-	
-
 	(tag) /home/krot-dendi2e/my_projects/githuh/chca/README.chca
 
 	*/
-	/*
-	<b>%s</b>
-
-	<ul>%s</ul>
-
-	<li>%s</li>
-	*/
+	
 
 struct stack input (char *f) {
 	if ( f == NULL) merror(1, " ", 0, 0);
 	
-	char f_s[1000];
+	char f_s[MAX_STR_SIZE];
 	
 	FILE *file;
 	file = fopen(f,"rt"); //только для чтения
@@ -532,7 +609,7 @@ struct stack input (char *f) {
 	
 	unsigned int k = 0;
 
-	for (unsigned int i = 0; fgets(f_s, 1000, file) != NULL; i++) {
+	for (unsigned int i = 0; fgets(f_s, MAX_STR_SIZE, file) != NULL; i++) {
 
 		if (/*f_s[0] != ' ' || f_s[0] != ' '*/1) {
 
@@ -586,7 +663,7 @@ void output(char *s) {
 
 	if (file == NULL) merror(2, s, 0, 0);
 	
-	char f_s[1000];
+	char f_s[MAX_STR_SIZE];
 /*
 	fprintf(output_file, "<!DOCTYPE html><html");
 	if (lang[0] != '\0') fprintf(output_file, " lang=\"%s\"", lang);
@@ -604,27 +681,20 @@ void output(char *s) {
 	fprintf(output_file, "</a>\n");
 	fprintf(output_file, "'>");
 	fprintf(output_file, "%c", f_s[j]);
+	fprintf(output_file, "<b>%s</b>");
+	fprintf(output_file, "<ul>%s</ul>");
+	fprintf(output_file, "<li>%s</li>");
 	fprintf(output_file, "</body></html>");
 	fclose(output_file);
 */
-
 }
 
 void chml(char *inputfile, char *outputfile) {
-	input()
+	//output(input(inputfile), outputfile);
 }
 
-
-
-
-
-
-
-
-
-
-
 int main (int argc, char *argv[]) {
+	//если данные передаются как параметр
 	if (argc > 1) {
 		switch (argv[1][0]) {
 		case '(':
@@ -632,7 +702,7 @@ int main (int argc, char *argv[]) {
 			exit(EXIT_SUCCESS);
 			break;
 		case 'h':
-			printf("commands:\nh - help;\nv - version;\nr /path/ - run from file;\nother commands and tutorial in file README.chca\n");
+			printf("lexem_list:\nh - help;\nv - version;\nr /path/ - run from file;\nother lexem_list and tutorial in file README.chca\n");
 			exit(EXIT_SUCCESS);
 			break;
 		case 'v':
@@ -643,6 +713,10 @@ int main (int argc, char *argv[]) {
 			runfromfile(argv[2]);
 			exit(EXIT_SUCCESS);
 			break;
+		case 'w':
+			chml(argv[2], argv[3]);
+			exit(EXIT_SUCCESS);
+			break;
 		default:
 			printf("try h for help.\n");
 			exit(EXIT_SUCCESS);
@@ -650,12 +724,13 @@ int main (int argc, char *argv[]) {
 		}
 		return 0;
 	}
+	//интерактивный режим
 	else {
 		printf("try h for help.\n");
 		for(;;) {
 			printf(">");
-			char s[100];
-			scanf("%s", s);
+			char s[NORM_STR_SIZE];
+			if (scanf("%s", s) != 1) merror(11, " ", 0, 0);
 			switch(s[0]) {
 			case '(':
 				run(s);
@@ -664,10 +739,13 @@ int main (int argc, char *argv[]) {
 				runfromfile(s);
 				break;
 			case 'h':
-				printf("commands:\nh - help;\nv - version;\nr /path/ - run from file;\nq - quit;\nother commands and tutorial in file README.chca;\n");
+				printf("lexem_list:\nh - help;\nv - version;\nr /path/ - run from file;\nq - quit;\nother lexem_list and tutorial in file README.chca;\n");
 				break;
 			case 'v':
 				printf(VERSION);
+				break;
+			case 'w':
+			//	chml(s, s);
 				break;
 			case 'q':
 				exit(EXIT_SUCCESS);
@@ -678,5 +756,5 @@ int main (int argc, char *argv[]) {
 			}
 		}
 
-	} 
+	}
 }
