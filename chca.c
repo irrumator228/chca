@@ -41,6 +41,18 @@
 #define KCYN  "\x1B[36m"
 #define KWHT  "\x1B[37m"
 
+//errors
+#define E_PATH      1  //path not specified
+#define E_COM       2  //command not found
+#define E_FOPEN     3  //open file
+#define E_FCLOSE    4  //close file
+#define E_UNK_OP    5  //unknown operator
+#define E_SEP       6  //extra closing/opening parenthesis/separator
+#define E_UNK_C     7  //unknown character
+#define E_BUF       8  //buffer overflow
+#define E_NODIR     9  //it's no such file or directory
+#define E_SYS       10 //error in chca code
+
 #if __linux__
 #endif
 
@@ -148,38 +160,35 @@ void printi (char *s, unsigned int j) {
 void merror (unsigned int n, char *s, unsigned int  i, unsigned int j) {
 	char *err_s;
 	switch (n) {
-	case 1:
+	case E_PATH:
 		err_s = "path not specified";
 		break;
-	case 2:
+	case E_COM:
 		err_s = "command not found";
 		break;
-	case 3:
+	case E_FOPEN:
 		err_s = "open file";
 		break;
-	case 4:
+	case E_FCLOSE:
 		err_s = "close file";
 		break;
-	case 5:
+	case E_UNK_OP:
 		err_s = "unknown operator";
 		break;
-	case 6:
+	case E_SEP:
 		err_s = "extra closing/opening parenthesis";
 		break;
-	case 7:
+	case E_UNK_C:
 		err_s = "unknown character";
 		break;
-	case 8:
-		err_s = " error code not reserved";
+	case E_BUF:
+		err_s = "buffer overflow";
 		break;
-	case 9:
+	case E_NODIR:
 		err_s = "it's no such file or directory";
 		break;
-	case 10:
+	case E_SYS:
 		err_s = "error in chca code";
-		break;
-	case 11:
-		err_s = "buffer overflow";
 		break;
 	default:
 		err_s = "unknown error";
@@ -220,19 +229,19 @@ void printer (unsigned int code, char *s, char *f, char *q, unsigned int i, unsi
 		printf("!(%s) %s\n", q, f);
 		break;
 	default: //вывод дефолта.
-		merror(10, "in function printer default output", 0, 0);
+		merror(E_SYS , "in function printer default output", 0, 0);
 		break;
 	}
 }
 
 struct fstck find (char *s, char *f) {
-	if ( f == NULL) merror(1, " ", 0, 0);
+	if ( f == NULL) merror(E_PATH, " ", 0, 0);
 	
 	char f_s[MAX_STR_SIZE];
 	
 	FILE *file;
 	file = fopen(f,"rt"); //только для чтения
-	if (file == NULL) merror(3, f, 0, 0);
+	if (file == NULL) merror(E_FOPEN , f, 0, 0);
 	
 	int done = -1;
 	
@@ -311,7 +320,7 @@ int listdir (char *s) {
 	struct dirent *dir;
 	d = opendir(s);
 	
-	if (!d) merror(1, s, 0, 0);
+	if (!d) merror(E_PATH, s, 0, 0);
 	
 	//if (dir->d_type == DT_REG) printf("%s\n", dir->d_name);
 
@@ -450,12 +459,12 @@ struct stack lexer (struct stack stck1) {
 				break;
 			}
 
-			if (done < 0) merror(7, stck1.stck[i], 0, j);
+			if (done < 0) merror(E_UNK_C, stck1.stck[i], 0, j);
 			done = -1;
 		}
 
 		stck2.size = cr.i + 1;
-		if (l != 0) merror(6, stck1.stck[i], 0, 0);
+		if (l != 0) merror(E_SEP, stck1.stck[i], 0, 0);
 		return stck2;
 	}
 }
@@ -470,7 +479,7 @@ struct stack parser (struct stack stck1) {
 			break;
 		case '+':
 			if (stck1.stck[i][1] != '\0') stck1.type[i][0] = 'p';
-			else merror(5, stck1.stck[i], 0, 0);
+			else merror(E_UNK_OP , stck1.stck[i], 0, 0);
 			//printf("fgfgfg\n");
 			break;
 		case '?':
@@ -493,7 +502,7 @@ struct stack parser (struct stack stck1) {
 		case '/':
 			if (opendir(stck1.stck[i]) != NULL) { stck1.type[i][0] = 'd'; }
 			else if (fopen(stck1.stck[i],"rt") != NULL) { stck1.type[i][0] = 'f'; }
-			else merror(9, stck1.stck[i], 0, 0);
+			else merror(E_NODIR, stck1.stck[i], 0, 0);
 			break;
 		default:
 			stck1.type[i][0] = 'q';
@@ -555,7 +564,7 @@ int logic (int argc, int argv[], char c) {
 		return (argv[1] ^ argv[2]);
 		break;
 	default:
-		merror(5," ",0,0);
+		merror(E_UNK_OP ," ",0,0);
 		break;
 	}
 }
@@ -570,11 +579,11 @@ void run(char *s) {
 }
 
 void runfromfile(char *f) {
-	if ( f == NULL) merror(1, " ", 0, 0);
+	if ( f == NULL) merror(E_PATH, " ", 0, 0);
 	char f_s[MAX_STR_SIZE];
 	FILE *file;
 	file = fopen(f,"rt"); //только для чтения
-	if (file == NULL) merror(3, f, 0, 0);
+	if (file == NULL) merror(E_FOPEN , f, 0, 0);
 
 	for (unsigned int i = 0; fgets(f_s, MAX_STR_SIZE, file) != NULL; i++) {
 		if ((f_s[0] != ' ' || f_s[1] != ' ') && f_s[0] != '\n') {
@@ -597,13 +606,13 @@ void runfromfile(char *f) {
 	
 
 struct stack input (char *f) {
-	if ( f == NULL) merror(1, " ", 0, 0);
+	if ( f == NULL) merror(E_PATH, " ", 0, 0);
 	
 	char f_s[MAX_STR_SIZE];
 	
 	FILE *file;
 	file = fopen(f,"rt"); //только для чтения
-	if (file == NULL) merror(3, f, 0, 0);
+	if (file == NULL) merror(E_FOPEN , f, 0, 0);
 	
 	int done = -1;
 	
@@ -657,11 +666,11 @@ struct stack input (char *f) {
 }
 
 void output(char *s) {
-	if (s == NULL) merror(1, " ", 0, 0);
+	if (s == NULL) merror(E_PATH, " ", 0, 0);
 	FILE *file;
 	file = fopen(s,"w+");
 
-	if (file == NULL) merror(2, s, 0, 0);
+	if (file == NULL) merror(E_COM, s, 0, 0);
 	
 	char f_s[MAX_STR_SIZE];
 /*
@@ -730,7 +739,7 @@ int main (int argc, char *argv[]) {
 		for(;;) {
 			printf(">");
 			char s[NORM_STR_SIZE];
-			if (scanf("%s", s) != 1) merror(11, " ", 0, 0);
+			if (scanf("%s", s) != 1) merror(E_BUF, " ", 0, 0);
 			switch(s[0]) {
 			case '(':
 				run(s);
