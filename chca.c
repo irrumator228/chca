@@ -19,18 +19,18 @@
  *          site https://irrumator228.github.io/
  */
 
-#define VERSION "chca-0.0.0.2-egg (c) 2023 Jerzy Pavka\n"
+#define VERSION "chca-0.0.3-egg (c) 2023 Jerzy Pavka\n"
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <dirent.h>
 
-#define PRINT_BUF_SIZE 60
+#define PRINT_BUF_SIZE     60
 #define MIN_PRINT_BUF_SIZE 20
-#define MIN_STR_SIZE 10
-#define NORM_STR_SIZE 100
-#define MAX_STR_SIZE 1000
+#define MIN_STR_SIZE       10
+#define NORM_STR_SIZE      100
+#define MAX_STR_SIZE       1000
 
 #define KNRM  "\x1B[0m"
 #define KRED  "\x1B[31m"
@@ -50,11 +50,8 @@
 #define E_SEP       6  //extra closing/opening parenthesis/separator
 #define E_UNK_C     7  //unknown character
 #define E_BUF       8  //buffer overflow
-#define E_NODIR     9  //it's no such file or directory
-#define E_SYS       10 //error in chca code
-
-#if __linux__
-#endif
+#define E_NODIR     9  //no such file or directory
+#define E_SYS       10 //error in code
 
 struct stack {
 	char stck[NORM_STR_SIZE][NORM_STR_SIZE];
@@ -121,7 +118,8 @@ void remove_st(lexem_list_head *l, lexem_list *target) {
         p = &(*p)->next;
     }
     *p = target->next;
-}*/
+}
+*/
 
 void push_st(lexem_list_head *l, lexem_list *target) {
 
@@ -188,7 +186,7 @@ void merror (unsigned int n, char *s, unsigned int  i, unsigned int j) {
 		err_s = "it's no such file or directory";
 		break;
 	case E_SYS:
-		err_s = "error in chca code";
+		err_s = " ";
 		break;
 	default:
 		err_s = "unknown error";
@@ -497,7 +495,14 @@ struct stack parser (struct stack stck1) {
 			stck1.type[i][0] = 'l';
 			break;
 		case '~':
-			char *home = getenv ("HOME");
+			/*
+			#if __linux__
+				char *HOME = getenv("HOMEDRIVE");
+			#elif _WIN32
+				//char *HOME = strcmp(getenv("HOMEDRIVE"),getenv(HOMEPATH)) "";
+			#else
+				merror(E_SYS,"unknow os", 0, 0);
+			#endif*/
 
 		case '/':
 			if (opendir(stck1.stck[i]) != NULL) { stck1.type[i][0] = 'd'; }
@@ -594,16 +599,10 @@ void runfromfile(char *f) {
 }
 
 	//(tag) /home/krot-dendi2e/my_projects/githuh/chca/README.chca
-	//
-	
 	/*
-
 	return [file | files] [with_i_j] [with comm]
-
 	(tag) /home/krot-dendi2e/my_projects/githuh/chca/README.chca
-
 	*/
-	
 
 struct stack input (char *f) {
 	if ( f == NULL) merror(E_PATH, " ", 0, 0);
@@ -703,67 +702,21 @@ void chml(char *inputfile, char *outputfile) {
 }
 
 int main (int argc, char *argv[]) {
-	//если данные передаются как параметр
-	if (argc > 1) {
-		switch (argv[1][0]) {
-		case '(':
-			run(argv[1]);
-			exit(EXIT_SUCCESS);
-			break;
-		case 'h':
-			printf("lexem_list:\nh - help;\nv - version;\nr /path/ - run from file;\nother lexem_list and tutorial in file README.chca\n");
-			exit(EXIT_SUCCESS);
-			break;
-		case 'v':
-			printf("%s\n", VERSION);
-			exit(EXIT_SUCCESS);
-			break;
-		case 'r':
-			runfromfile(argv[2]);
-			exit(EXIT_SUCCESS);
-			break;
-		case 'w':
-			chml(argv[2], argv[3]);
-			exit(EXIT_SUCCESS);
-			break;
-		default:
-			printf("try h for help.\n");
-			exit(EXIT_SUCCESS);
-			break;
-		}
-		return 0;
-	}
-	//интерактивный режим
-	else {
+	switch (argv[1][0]) {
+	case 'h':
+		printf("lexem_list:\nh - help;\nv - version;\nr /path/ - run from file;\nother lexem_list and tutorial in file README.chca\n");
+		break;
+	case 'v':
+		printf("%s\n", VERSION);
+		break;
+	case 'r':
+		runfromfile(argv[2]);
+		break;
+	case 'w':
+		chml(argv[2], argv[3]);
+		break;
+	default:
 		printf("try h for help.\n");
-		for(;;) {
-			printf(">");
-			char s[NORM_STR_SIZE];
-			if (scanf("%s", s) != 1) merror(E_BUF, " ", 0, 0);
-			switch(s[0]) {
-			case '(':
-				run(s);
-				break;
-			case 'r':
-				runfromfile(s);
-				break;
-			case 'h':
-				printf("lexem_list:\nh - help;\nv - version;\nr /path/ - run from file;\nq - quit;\nother lexem_list and tutorial in file README.chca;\n");
-				break;
-			case 'v':
-				printf(VERSION);
-				break;
-			case 'w':
-			//	chml(s, s);
-				break;
-			case 'q':
-				exit(EXIT_SUCCESS);
-				break;
-			default:
-				printf("try h for help.\n");
-				break;
-			}
-		}
-
+		break;
 	}
 }
