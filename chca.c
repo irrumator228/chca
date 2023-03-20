@@ -13,7 +13,7 @@
  * chca - simple tool for working with very primitive knowledge bases.
  * other information in README.chca
  *
- * Author:
+ * author:
  *          Jerzy Pavka
  *          mail jerzypavka@gmail.com
  *          site https://irrumator228.github.io/
@@ -26,11 +26,12 @@
 #include <string.h>
 #include <dirent.h>
 
-#define PRINT_BUF_SIZE     60
-#define MIN_PRINT_BUF_SIZE 20
-#define MIN_STR_SIZE       10
-#define NORM_STR_SIZE      100
-#define MAX_STR_SIZE       1000
+#define PRINT_BUF     60
+#define MIN_PRINT_BUF 20
+#define MIN_STR       10
+#define NORM_STR      100
+#define MAX_STR       1000
+#define MAX_PATH      100
 
 #define KNRM  "\x1B[0m"
 #define KRED  "\x1B[31m"
@@ -53,16 +54,30 @@
 #define E_NODIR     9  //no such file or directory
 #define E_SYS       10 //error in code
 
-struct stack {
-	char stck[NORM_STR_SIZE][NORM_STR_SIZE];
-	unsigned int len[NORM_STR_SIZE];
-	unsigned int size;
-	char type[NORM_STR_SIZE][5];
+char *get_homedir(void) {
+    char homedir[MAX_PATH];
+#ifdef _WIN32
+    snprintf(homedir, MAX_PATH, "%s%s", getenv("HOMEDRIVE"), getenv("HOMEPATH"));
+#else
+    snprintf(homedir, MAX_PATH, "%s", getenv("HOME"));
+#endif
+    return strdup(homedir);
+}
 
-	//char f[NORM_STR_SIZE][NORM_STR_SIZE];
-	//char s[NORM_STR_SIZE][MAX_STR_SIZE];
-	//unsigned int i[MAX_STR_SIZE];
-	//unsigned int j[MAX_STR_SIZE];
+typedef struct string {
+	char s[MAX_STR];
+} string;
+
+struct stack {
+	char stck[NORM_STR][NORM_STR];
+	unsigned int len[NORM_STR];
+	unsigned int size;
+	char type[NORM_STR][5];
+
+	//char f[NORM_STR][NORM_STR];
+	//char s[NORM_STR][MAX_STR];
+	//unsigned int i[MAX_STR];
+	//unsigned int j[MAX_STR];
 	//unsigned int size;
 };
 
@@ -79,19 +94,19 @@ typedef struct cur {
 */
 
 struct fstck {
-	char query[NORM_STR_SIZE][NORM_STR_SIZE];
-	char f[NORM_STR_SIZE][NORM_STR_SIZE];
-	char s[NORM_STR_SIZE][MAX_STR_SIZE];
-	unsigned int i[MAX_STR_SIZE];
-	unsigned int j[MAX_STR_SIZE];
-	unsigned int je[MAX_STR_SIZE];
+	char query[NORM_STR][NORM_STR];
+	char f[NORM_STR][NORM_STR];
+	char s[NORM_STR][MAX_STR];
+	unsigned int i[MAX_STR];
+	unsigned int j[MAX_STR];
+	unsigned int je[MAX_STR];
 	unsigned int size;
 };
 
 typedef struct file_entry_list {
 	//int status; //1 - entry not found, 0 - entry exists
-	char file[NORM_STR_SIZE];
-	char entry[PRINT_BUF_SIZE];
+	char file[NORM_STR];
+	char entry[PRINT_BUF];
 	unsigned int i;
 	unsigned int j;
 } file_entry_list;
@@ -101,7 +116,7 @@ typedef struct file_entry_list_head {
 } file_entry_list_head;
 
 typedef struct lexem_list {
-	char lexem[NORM_STR_SIZE];
+	char lexem[NORM_STR];
 	char type[3];
 	file_entry_list_head *head;
 	struct lexem_list *next;
@@ -121,7 +136,9 @@ void remove_st(lexem_list_head *l, lexem_list *target) {
 }
 */
 
-void push_st(lexem_list_head *l, lexem_list *target) {
+void push_st(lexem_list_head *l) {
+	lexem_list *tmp = (lexem_list*) malloc(sizeof(lexem_list));
+	//tmp->
 
 }
 
@@ -129,30 +146,29 @@ void new_st(lexem_list_head *l, lexem_list *target) {
 	
 }
 
-void printi (char *s, unsigned int j) {
+/*int*/ char *printi (/*char result[MAX_STR],*/ char *s, unsigned int j) {
+	char result_1[MIN_PRINT_BUF];
+	char result_2[PRINT_BUF - MIN_PRINT_BUF];
+	//char *result = malloc(sizeof(char) * MAX_STR);
+	char result[MAX_STR];
+	char *result_p = result;
+	unsigned int result_i = 0;
 	if (s[strlen(s) - 1] == '\n') s[strlen(s) - 1] = ' ';
- 	if (strlen(s) > PRINT_BUF_SIZE && j > MIN_PRINT_BUF_SIZE) {
-		printf("  ");
-		for (unsigned int i = j - MIN_PRINT_BUF_SIZE; i < j - 1; i++) {
-			printf("%c", s[i]);
-		}
-		printf("%s -> %s", KMAG, KNRM);
-		for (unsigned int i = j - 1; i < strlen(s) && i < j + PRINT_BUF_SIZE-MIN_PRINT_BUF_SIZE; i++) {
-			printf("%c", s[i]);
-		}
-		printf("\n");
+	for (unsigned int i = j >= MIN_PRINT_BUF ? j - MIN_PRINT_BUF : 0; i < j - 1; i++) {
+		result_1[result_i] = s[i];
+		result_i++;
 	}
-	else {
-		printf("  ");
-		for (unsigned int i = 0; i < j - 1; i++) {
-			printf("%c", s[i]);
-		}
-		printf("%s -> %s", KMAG, KNRM);
-		for (unsigned int i = j - 1; i < strlen(s) && i < j + PRINT_BUF_SIZE-MIN_PRINT_BUF_SIZE; i++) {
-			printf("%c", s[i]);
-		}
-		printf("\n");
+	result_1[result_i] = '\0';
+	result_i = 0;
+	for (unsigned int i = j - 1; i < strlen(s) && i < j + PRINT_BUF-MIN_PRINT_BUF; i++) {
+		result_2[result_i] = s[i];
+		result_i++;
 	}
+	result_2[result_i] = '\0';
+
+	snprintf(result, MAX_STR, "  %s %s->%s %s", result_1, KMAG, KNRM, result_2); 
+	//return 0;
+	return result_p;
 }
 
 void merror (unsigned int n, char *s, unsigned int  i, unsigned int j) {
@@ -194,18 +210,19 @@ void merror (unsigned int n, char *s, unsigned int  i, unsigned int j) {
 	}
 	//вывод без файла, строки и номера символа 
 	if ((i == 0) && (j == 0)) {
-		printf("%s\n", s);
-		printf("%u error. %s.\n", n, err_s);
+		printf("%s\n%u error. %s.\n", s, n, err_s);
 	}
 	//вывод строки и номера символа
 	else if (i == 0) {
-		printi(s,j);
-		printf("%u error. %s:%u\n", n, err_s, j);
+		//char buf[MAX_STR];
+		//printi(buf, s, j);
+		printf("%s\n%u error. %s:%u\n", /*buf,*/ printi(s,j), n, err_s, j);
 	}
 	//вывод файла, строки и номера символа
 	else {
-		printi(s,j);
-		printf("%u error. %s. %s:%u:%u\n", n, err_s, s, i, j);
+		//char buf[MAX_STR];
+		//printi(buf,s,j);
+		printf("%s\n%u error. %s. %s:%u:%u\n", /*buf,*/ printi(s,j), n, err_s, s, i, j);
 	}
 	exit(EXIT_FAILURE);
 }
@@ -213,7 +230,9 @@ void merror (unsigned int n, char *s, unsigned int  i, unsigned int j) {
 void printer (unsigned int code, char *s, char *f, char *q, unsigned int i, unsigned int j) {
 	switch (code) {
 	case 1: //вывод вхождения из файла
-		printi(s,j);
+		char buf[MAX_STR];
+		//printi(buf,s,j);
+		printf("%s\n", /*buf*/ printi(s,j));
 		printf("(%s) %s:%u:%u\n", q, f, i, j);
 		break;
 	case 2: //вывод отсутствия вхождения
@@ -235,7 +254,7 @@ void printer (unsigned int code, char *s, char *f, char *q, unsigned int i, unsi
 struct fstck find (char *s, char *f) {
 	if ( f == NULL) merror(E_PATH, " ", 0, 0);
 	
-	char f_s[MAX_STR_SIZE];
+	char f_s[MAX_STR];
 	
 	FILE *file;
 	file = fopen(f,"rt"); //только для чтения
@@ -247,7 +266,7 @@ struct fstck find (char *s, char *f) {
 	
 	unsigned int k = 0;
 
-	for (unsigned int i = 0; fgets(f_s, MAX_STR_SIZE, file) != NULL; i++) {
+	for (unsigned int i = 0; fgets(f_s, MAX_STR, file) != NULL; i++) {
 
 		if (f_s[0] != ' ' || f_s[0] != ' ') {
 
@@ -346,9 +365,11 @@ struct stack lexer (struct stack stck1) {
 	int done = -1;
 	unsigned int l = 0;
 
-	char buf[NORM_STR_SIZE];
+	char buf[NORM_STR];
 
 	for (unsigned int i = 0; i < stck1.size; i++) {
+
+		//lexem_list_head 
 
 		//printf("%s", stck1.stck[i]);//========================
 		
@@ -358,22 +379,16 @@ struct stack lexer (struct stack stck1) {
 			switch (stck1.stck[i][j]) {
 			case '\n':
 			case '\0':
-				
-				break;
 			case '-':
 			case '.':
 			case '/':
-				break;
 			case '(':
 			case '{':
 			case '[':
-				break;
 			case ')':
 			case '}':
 			case ']':
-				break;
 			case ' ':
-				break;
 			case '&': 
 			case '^': 
 			case '!': 
@@ -386,6 +401,7 @@ struct stack lexer (struct stack stck1) {
 			//case '+':
 			case '=':
 			case '@':
+
 				break;
 			default:
 				break;
@@ -495,14 +511,8 @@ struct stack parser (struct stack stck1) {
 			stck1.type[i][0] = 'l';
 			break;
 		case '~':
-			/*
-			#if __linux__
-				char *HOME = getenv("HOMEDRIVE");
-			#elif _WIN32
-				//char *HOME = strcmp(getenv("HOMEDRIVE"),getenv(HOMEPATH)) "";
-			#else
-				merror(E_SYS,"unknow os", 0, 0);
-			#endif*/
+			//char path[MAX_PATH];
+			//snprintf(path, MAX_PATH, "%s%s", get_homedir(), );
 
 		case '/':
 			if (opendir(stck1.stck[i]) != NULL) { stck1.type[i][0] = 'd'; }
@@ -520,7 +530,7 @@ struct stack parser (struct stack stck1) {
 void runer (struct stack stck1) {
 	struct fstck fstck1;
 
-	char par[NORM_STR_SIZE][5];
+	char par[NORM_STR][5];
 	unsigned int par_i = 0;
 
 	for (unsigned int i = 0; i < stck1.size; i++) {
@@ -585,12 +595,12 @@ void run(char *s) {
 
 void runfromfile(char *f) {
 	if ( f == NULL) merror(E_PATH, " ", 0, 0);
-	char f_s[MAX_STR_SIZE];
+	char f_s[MAX_STR];
 	FILE *file;
 	file = fopen(f,"rt"); //только для чтения
 	if (file == NULL) merror(E_FOPEN , f, 0, 0);
 
-	for (unsigned int i = 0; fgets(f_s, MAX_STR_SIZE, file) != NULL; i++) {
+	for (unsigned int i = 0; fgets(f_s, MAX_STR, file) != NULL; i++) {
 		if ((f_s[0] != ' ' || f_s[1] != ' ') && f_s[0] != '\n') {
 			run(f_s);
 		}
@@ -607,7 +617,7 @@ void runfromfile(char *f) {
 struct stack input (char *f) {
 	if ( f == NULL) merror(E_PATH, " ", 0, 0);
 	
-	char f_s[MAX_STR_SIZE];
+	char f_s[MAX_STR];
 	
 	FILE *file;
 	file = fopen(f,"rt"); //только для чтения
@@ -617,7 +627,7 @@ struct stack input (char *f) {
 	
 	unsigned int k = 0;
 
-	for (unsigned int i = 0; fgets(f_s, MAX_STR_SIZE, file) != NULL; i++) {
+	for (unsigned int i = 0; fgets(f_s, MAX_STR, file) != NULL; i++) {
 
 		if (/*f_s[0] != ' ' || f_s[0] != ' '*/1) {
 
@@ -671,7 +681,7 @@ void output(char *s) {
 
 	if (file == NULL) merror(E_COM, s, 0, 0);
 	
-	char f_s[MAX_STR_SIZE];
+	char f_s[MAX_STR];
 /*
 	fprintf(output_file, "<!DOCTYPE html><html");
 	if (lang[0] != '\0') fprintf(output_file, " lang=\"%s\"", lang);
@@ -704,7 +714,7 @@ void chml(char *inputfile, char *outputfile) {
 int main (int argc, char *argv[]) {
 	switch (argv[1][0]) {
 	case 'h':
-		printf("lexem_list:\nh - help;\nv - version;\nr /path/ - run from file;\nother lexem_list and tutorial in file README.chca\n");
+		printf("commands:\nh - help;\nv - version;\nr /path/ - run from file;\nother lexem_list and tutorial in file README.chca\n");
 		break;
 	case 'v':
 		printf("%s\n", VERSION);
@@ -719,4 +729,5 @@ int main (int argc, char *argv[]) {
 		printf("try h for help.\n");
 		break;
 	}
+	exit(EXIT_SUCCESS);
 }
