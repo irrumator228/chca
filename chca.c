@@ -54,16 +54,6 @@
 #define E_NODIR     9  //no such file or directory
 #define E_SYS       10 //error in code
 
-char *get_homedir(void) {
-    char homedir[MAX_PATH];
-#ifdef _WIN32
-    snprintf(homedir, MAX_PATH, "%s%s", getenv("HOMEDRIVE"), getenv("HOMEPATH"));
-#else
-    snprintf(homedir, MAX_PATH, "%s", getenv("HOME"));
-#endif
-    return strdup(homedir);
-}
-
 typedef struct string {
 	char s[MAX_STR];
 } string;
@@ -202,7 +192,7 @@ void merror (unsigned int n, char *s, unsigned int  i, unsigned int j) {
 		err_s = "it's no such file or directory";
 		break;
 	case E_SYS:
-		err_s = " ";
+		err_s = "system error";
 		break;
 	default:
 		err_s = "unknown error";
@@ -224,6 +214,7 @@ void merror (unsigned int n, char *s, unsigned int  i, unsigned int j) {
 		//printi(buf,s,j);
 		printf("%s\n%u error. %s. %s:%u:%u\n", /*buf,*/ printi(s,j), n, err_s, s, i, j);
 	}
+	//return 1;
 	exit(EXIT_FAILURE);
 }
 
@@ -251,6 +242,16 @@ void printer (unsigned int code, char *s, char *f, char *q, unsigned int i, unsi
 	}
 }
 
+char *get_homedir(void) {
+    char homedir[MAX_PATH];
+	#ifdef _WIN32
+   		snprintf(homedir, MAX_PATH, "%s%s", getenv("HOMEDRIVE"), getenv("HOMEPATH"));
+	#else
+   		snprintf(homedir, MAX_PATH, "%s", getenv("HOME"));
+	#endif
+    return strdup(homedir);
+}
+
 struct fstck find (char *s, char *f) {
 	if ( f == NULL) merror(E_PATH, " ", 0, 0);
 	
@@ -260,18 +261,20 @@ struct fstck find (char *s, char *f) {
 	file = fopen(f,"rt"); //только для чтения
 	if (file == NULL) merror(E_FOPEN , f, 0, 0);
 	
+	//TODO: done -> break;
 	int done = -1;
 	
 	struct fstck fstck1;
 	
-	unsigned int k = 0;
+	unsigned int k_1 = 0;
 
 	for (unsigned int i = 0; fgets(f_s, MAX_STR, file) != NULL; i++) {
+		//TODO fgets to fgetc
+	/*for (unsigned int i = 0; fgetc(c, file) != NULL; i++)*/
+		if (f_s[0] == ' ' && f_s[0] == ' ') continue; 
 
-		if (f_s[0] != ' ' || f_s[0] != ' ') {
-
-			for (unsigned int j = 0; j < strlen(f_s); j++) {
-				switch(f_s[j]) {
+		for (unsigned int j = 0; j < strlen(f_s); j++) {
+			switch(f_s[j]) {
 				case ' ':
 					break;
 				case '\n':
@@ -300,37 +303,131 @@ struct fstck find (char *s, char *f) {
 					break;
 				case ']':
 					break;
-				case '\'':
-					break;
-				case '"':
-					break;
-				default:
-					break;
-				}
-
-				if (f_s[j] == s[0]) {
-				for (unsigned int k = 0; k < strlen(s) && done < 0 ; k++) {
-					if (f_s[j + k] == s[k]) done = -1;
-					else done = 1;
-				}
-				if (done == -1) { 
-					strcpy(fstck1.f[k],f);
-					strcpy(fstck1.query[k], s);
-					strcpy(fstck1.s[k], f_s);
-					fstck1.i[k] = i + 1;
-					fstck1.j[k] = j + 1;
-					fstck1.size = k+1; 
-					k++; 
-				}
-				else done = -1;
-				}
+			case '\'':
+				break;
+			case '"':
+				break;
+			default:
+				break;
 			}
+
+			if (f_s[j] != s[0]) continue;
+			
+			done = -1;
+
+			unsigned int k = 0;
+			
+			for ( ; k < strlen(s); k++) {
+				if (f_s[j + k] != s[k]) { done = 1; break; }
+			}
+
+			if (done > 0) continue;
+			
+			//TODO: done -> break;
+				strcpy(fstck1.f[k_1],f);
+				strcpy(fstck1.query[k_1], s);
+				strcpy(fstck1.s[k_1], f_s);
+				fstck1.i[k_1] = i + 1;
+				fstck1.j[k_1] = j + 1;
+				fstck1.size = k_1+1; 
+				k_1++; 
+			
+			done = -1;
 		}
 	}
 	fclose(file);
-	if (k != 0) return fstck1;
+	if (k_1 != 0) return fstck1;
 	else { strcpy(fstck1.f[0], f); strcpy(fstck1.query[0], s); strcpy(fstck1.s[0], " "); fstck1.i[0] = 0, fstck1.j[0] = 0; fstck1.je[0] = 0; fstck1.size = 1; return fstck1;}
 }
+
+/*struct fstck find (char *s, char *f) {
+	if ( f == NULL) merror(E_PATH, " ", 0, 0);
+	
+	char f_s[MAX_STR];
+	
+	FILE *file;
+	file = fopen(f,"rt"); //только для чтения
+	if (file == NULL) merror(E_FOPEN , f, 0, 0);
+	
+	struct fstck fstck1;
+	
+	unsigned int fstck1_i = 0;
+
+	char c;
+	struct cur f_cr;
+	f_cr.i = 0;
+	f_cr.j = 0;
+
+	for (unsigned int i = 0; c = fgetc(file) != EOF; i++) {
+
+		f_cr.j++;
+
+		switch(c) {
+		case ' ':
+			break;
+		case '\n':
+			f_cr.i++;
+			f_cr.j = 0;
+			break;
+		case '\0':
+			break;
+		case '/':
+			break;
+		case '(':
+			break;
+		case ')':
+			break;
+		case '.':
+			break;
+		case '#':
+			break;
+		case ':':
+			break;
+		case '{':
+			break;
+		case '}':
+			break;
+		case '|':
+			break;
+		case '[':
+			break;
+		case ']':
+			break;
+		case '\'':
+			break;
+		case '"':
+			break;
+		default:
+			break;
+		}
+
+		if (c != s[0]) continue;
+
+		unsigned int k = 0;
+
+		int done = -1;
+		
+		for ( ; k < strlen(s); k++) {
+			if (f_s[j + k] != s[k]) { done = 1; break; }
+		}
+
+		if (done > 0) continue;
+			
+		//TODO: done -> break;
+		strcpy(fstck1.f[fstck1_i],f);
+		strcpy(fstck1.query[fstck1_i], s);
+		//strcpy(fstck1.s[fstck1_i], f_s);
+		fstck1.i[fstck1_i] = i + 1;
+		fstck1.j[fstck1_i] = j + 1;
+		fstck1.size = fstck1_i+1; 
+		fstck1_i++; 
+		
+		done = -1;
+	}
+	fclose(file);
+	if (fstck1_i != 0) return fstck1;
+	else { strcpy(fstck1.f[0], f); strcpy(fstck1.query[0], s); strcpy(fstck1.s[0], " "); fstck1.i[0] = 0, fstck1.j[0] = 0; fstck1.je[0] = 0; fstck1.size = 1; return fstck1;}
+}*/
 
 int listdir (char *s) {
 	DIR *d;
@@ -344,6 +441,7 @@ int listdir (char *s) {
 	unsigned int f_i = 0;
 
 	if (d) {
+		//TODO: add continue or return
 		while ((dir = readdir(d)) != NULL) { 	
 			if ((strcmp(dir->d_name,".") > 0) && (strcmp(dir->d_name,"..") > 0)) {
 				
@@ -361,7 +459,7 @@ struct stack lexer (struct stack stck1) {
 	struct stack stck2;
 	
 	struct cur cr = { 0 , 0 };
-
+	//TODO: done -> break;
 	int done = -1;
 	unsigned int l = 0;
 
@@ -535,6 +633,7 @@ void runer (struct stack stck1) {
 
 	for (unsigned int i = 0; i < stck1.size; i++) {
 		if (stck1.type[i][0] == 'p') {
+			//TODO: add continue or return
 			strcpy (par[par_i], stck1.stck[i]);
 			par_i++;
 			printf("'%s'\n", par[par_i]);
@@ -542,45 +641,19 @@ void runer (struct stack stck1) {
 	}
 
 	for (unsigned int i = 0; i < stck1.size; i++) {
-
-		if (stck1.type[i][0] == 'q') {
-
-			for (unsigned int j = 0; j < stck1.size; j++) {
-
-				if (stck1.type[j][0] == 'f') {
-					struct fstck fstck1 = find(stck1.stck[i], stck1.stck[j]);
-					
-					if (fstck1.i[0] != 0) {
-						for (unsigned int j = 0; j < fstck1.size; j++) {
-							printer(1, fstck1.s[j], fstck1.f[j], fstck1.query[j], fstck1.i[j], fstck1.j[j]);
-						}
-					}
-					else printer(2, " ", fstck1.f[0], fstck1.query[0], 0, 0);
-					
+		if (stck1.type[i][0] != 'q') continue; 
+		for (unsigned int j = 0; j < stck1.size; j++) {
+			if (stck1.type[j][0] != 'f') continue;
+			struct fstck fstck1 = find(stck1.stck[i], stck1.stck[j]);
+			if (fstck1.i[0] != 0) {
+				for (unsigned int j = 0; j < fstck1.size; j++) {
+					printer(1, fstck1.s[j], fstck1.f[j], fstck1.query[j], fstck1.i[j], fstck1.j[j]);
 				}
 			}
+			else printer(2, " ", fstck1.f[0], fstck1.query[0], 0, 0);
+					
 		}
-	}
-}
-
-int logic (int argc, int argv[], char c) {
-	switch (c) {
-	case '&':
-		//for (unsigned int i = 2)
-		return (argv[1] && argv[2]);
-		break;
-	case '|':
-		return (argv[1] || argv[2]);
-		break;	
-	case '!':
-		return (!argv[1]);
-		break;
-	case '^':
-		return (argv[1] ^ argv[2]);
-		break;
-	default:
-		merror(E_UNK_OP ," ",0,0);
-		break;
+					
 	}
 }
 
@@ -588,24 +661,22 @@ void run(char *s) {
 	struct stack stck1;
 	strcpy(stck1.stck[0], s);
 	stck1.size = 1;
-
-	runer(parser(lexer(stck1)));
-	
+	runer(parser(lexer(stck1)));	
 }
 
-void runfromfile(char *f) {
-	if ( f == NULL) merror(E_PATH, " ", 0, 0);
+int runfromfile(char *f) {
+	if ( f == NULL) { merror(E_PATH, " ", 0, 0); return 1; }
 	char f_s[MAX_STR];
 	FILE *file;
 	file = fopen(f,"rt"); //только для чтения
-	if (file == NULL) merror(E_FOPEN , f, 0, 0);
+	if (file == NULL) { merror(E_FOPEN , f, 0, 0); return 1; }
 
 	for (unsigned int i = 0; fgets(f_s, MAX_STR, file) != NULL; i++) {
-		if ((f_s[0] != ' ' || f_s[1] != ' ') && f_s[0] != '\n') {
-			run(f_s);
-		}
+		//TODO fgets to fgetc
+		if ((f_s[0] != ' ' || f_s[1] != ' ') && f_s[0] != '\n') run(f_s);
 	}
 	fclose(file);
+	return 0;
 }
 
 	//(tag) /home/krot-dendi2e/my_projects/githuh/chca/README.chca
@@ -616,58 +687,54 @@ void runfromfile(char *f) {
 
 struct stack input (char *f) {
 	if ( f == NULL) merror(E_PATH, " ", 0, 0);
-	
 	char f_s[MAX_STR];
-	
 	FILE *file;
 	file = fopen(f,"rt"); //только для чтения
 	if (file == NULL) merror(E_FOPEN , f, 0, 0);
 	
-	int done = -1;
-	
 	unsigned int k = 0;
 
 	for (unsigned int i = 0; fgets(f_s, MAX_STR, file) != NULL; i++) {
+		//TODO fgets to fgetc
 
-		if (/*f_s[0] != ' ' || f_s[0] != ' '*/1) {
+		if (f_s[0] == ' ' && f_s[0] == ' ') continue;
 
-			for (unsigned int j = 0; j < strlen(f_s); j++) {
-				switch(f_s[j]) {
-				case ' ':
-					break;
-				case '\n':
-					break;
-				case '\0':
-					break;
-				case '/':
-					break;
-				case '(':
-					break;
-				case ')':
-					break;
-				case '.':
-					break;
-				case '#':
-					break;
-				case ':':
-					break;
-				case '{':
-					break;
-				case '}':
-					break;
-				case '|':
-					break;
-				case '[':
-					break;
-				case ']':
-					break;
-				case '\'':
-					break;
-				case '"':
-					break;
-				default:
-					break;
-				}
+		for (unsigned int j = 0; j < strlen(f_s); j++) {
+			switch(f_s[j]) {
+			case ' ':
+				break;
+			case '\n':
+				break;
+			case '\0':
+				break;
+			case '/':
+				break;
+			case '(':
+				break;
+			case ')':
+				break;
+			case '.':
+				break;
+			case '#':
+				break;
+			case ':':
+				break;
+			case '{':
+				break;
+			case '}':
+				break;
+			case '|':
+				break;
+			case '[':
+				break;
+			case ']':
+				break;
+			case '\'':
+				break;
+			case '"':
+				break;
+			default:
+				break;
 			}
 		}
 	}
@@ -694,11 +761,8 @@ void output(char *s) {
 	fprintf(output_file, "<p>");
 	fprintf(output_file, "</p>\n");
 	fprintf(output_file, "<pre translate=\"no\">%s</pre translate=\"no\">\n", f_s);
-	//fprintf(output_file, "%s<br>\n", f_s);
-	fprintf(output_file, "<a href='");
-	fprintf(output_file, "</a>\n");
-	fprintf(output_file, "'>");
-	fprintf(output_file, "%c", f_s[j]);
+	//fprintf(output_file, "<br>\n");
+	fprintf(output_file, "<a href='%s'></a>\n");
 	fprintf(output_file, "<b>%s</b>");
 	fprintf(output_file, "<ul>%s</ul>");
 	fprintf(output_file, "<li>%s</li>");
@@ -707,11 +771,16 @@ void output(char *s) {
 */
 }
 
-void chml(char *inputfile, char *outputfile) {
+int chml(char *inputfile, char *outputfile) {
 	//output(input(inputfile), outputfile);
+	return 0;
 }
 
 int main (int argc, char *argv[]) {
+	if (argc < 2) {
+		printf("try h for help.\n");
+		exit(EXIT_SUCCESS); 
+	}
 	switch (argv[1][0]) {
 	case 'h':
 		printf("commands:\nh - help;\nv - version;\nr /path/ - run from file;\nother lexem_list and tutorial in file README.chca\n");
@@ -720,14 +789,14 @@ int main (int argc, char *argv[]) {
 		printf("%s\n", VERSION);
 		break;
 	case 'r':
-		runfromfile(argv[2]);
+		if (runfromfile(argv[2]) != 0) return 1;
 		break;
 	case 'w':
-		chml(argv[2], argv[3]);
+		if (chml(argv[2], argv[3]) != 0) return 1;
 		break;
 	default:
 		printf("try h for help.\n");
 		break;
 	}
-	exit(EXIT_SUCCESS);
+	return 0;
 }
