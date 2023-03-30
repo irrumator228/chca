@@ -19,7 +19,7 @@
  *          site https://irrumator228.github.io/
  */
 
-#define VERSION "chca-0.0.3-egg (c) 2023 Jerzy Pavka\n"
+#define VERSION "chca-0.0.5-egg (c) 2023 Jerzy Pavka\n"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -59,6 +59,7 @@ typedef struct string {
 } string;
 
 struct stack {
+	//TODO: delete this shit
 	char stck[NORM_STR][NORM_STR];
 	unsigned int len[NORM_STR];
 	unsigned int size;
@@ -299,10 +300,10 @@ struct fstck find (char *s, char *f) {
 					break;
 				case '|':
 					break;
-				case '[':
-					break;
-				case ']':
-					break;
+			case '[':
+				break;
+			case ']':
+				break;
 			case '\'':
 				break;
 			case '"':
@@ -774,6 +775,21 @@ void output(char *s) {
 int chml(char *inputfile, char *outputfile) {
 	//output(input(inputfile), outputfile);
 	return 0;
+}
+
+int make_gv() {
+	char s[MAX_STR];
+	char s1[MAX_STR];
+	char s2[MAX_STR];
+	char color[MAX_STR];
+	char com[MAX_STR];
+	//snprintf(s, MAX_STR, "%s -- %s;\n", s1, s2);
+	//snprintf(s, MAX_STR, "%s -> %s;\n", s1, s2);
+	//snprintf(s, MAX_STR, "%s;\n", s1, s2);
+	//snprintf(s, MAX_STR, "[color=%s]\n", color);
+	//snprintf(s, MAX_STR, "graph {\n");
+	//snprintf(s, MAX_STR, "}\n");
+	//snprintf(s, MAX_STR, "/*%s*/\n", com);
 }
 
 int main (int argc, char *argv[]) {
